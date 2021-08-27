@@ -18,11 +18,12 @@
  */
 package org.apache.pinot.client;
 
-import com.google.common.collect.ImmutableList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.I0Itec.zkclient.ZkClient;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -48,13 +49,14 @@ public class DynamicBrokerSelectorTest {
   private DynamicBrokerSelector _dynamicBrokerSelectorUnderTest;
 
   private static final String ZK_SERVER = "zkServers";
+  private static final Map<String, List<String>> TABLE_TO_BROKER_LIST_MAP = ImmutableMap.of(
+          "table1", Collections.singletonList("broker1")
+  );
 
   @BeforeMethod
   public void setUp() throws Exception {
     openMocks(this);
-    Map<String, List<String>> tableToBrokerListMap = new HashMap<>();
-    tableToBrokerListMap.put("table1", Collections.singletonList("broker1"));
-    when(_mockExternalViewReader.getTableToBrokersMap()).thenReturn(tableToBrokerListMap);
+    when(_mockExternalViewReader.getTableToBrokersMap()).thenReturn(TABLE_TO_BROKER_LIST_MAP);
     _dynamicBrokerSelectorUnderTest = Mockito.spy(new DynamicBrokerSelector(ZK_SERVER) {
       @Override
       protected ExternalViewReader getEvReader(ZkClient zkClient) {
@@ -122,7 +124,9 @@ public class DynamicBrokerSelectorTest {
 
   @Test
   public void testGetBrokers() {
-    assertEquals(_dynamicBrokerSelectorUnderTest.getBrokers(), ImmutableList.of(ZK_SERVER));
+    List<String> actualBrokers = _dynamicBrokerSelectorUnderTest.getBrokers();
+
+    assertEquals(actualBrokers, ImmutableList.of("broker1"));
   }
 
   @Test

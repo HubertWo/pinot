@@ -47,7 +47,6 @@ public class DynamicBrokerSelector implements BrokerSelector, IZkDataListener {
   private final AtomicReference<List<String>> _allBrokerListRef = new AtomicReference<>();
   private final ZkClient _zkClient;
   private final ExternalViewReader _evReader;
-  private final List<String> _brokerList;
 
   public DynamicBrokerSelector(String zkServers) {
     _zkClient = getZkClient(zkServers);
@@ -55,7 +54,6 @@ public class DynamicBrokerSelector implements BrokerSelector, IZkDataListener {
     _zkClient.waitUntilConnected(60, TimeUnit.SECONDS);
     _zkClient.subscribeDataChanges(ExternalViewReader.BROKER_EXTERNAL_VIEW_PATH, this);
     _evReader = getEvReader(_zkClient);
-    _brokerList = ImmutableList.of(zkServers);
     refresh();
   }
 
@@ -100,7 +98,8 @@ public class DynamicBrokerSelector implements BrokerSelector, IZkDataListener {
 
   @Override
   public List<String> getBrokers() {
-    return _brokerList;
+    List<String> brokers = _allBrokerListRef.get();
+    return (brokers != null) ? ImmutableList.copyOf(brokers) : ImmutableList.of();
   }
 
   @Override
